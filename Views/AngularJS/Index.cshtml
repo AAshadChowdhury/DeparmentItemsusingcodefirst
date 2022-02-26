@@ -1,0 +1,114 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+<!DOCTYPE html>
+<html ng-app="student">
+<head>
+    @*<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>*@
+    <script src="~/lib/angular.js/angular.js"></script>
+    <script language="javascript">
+        var model = {};//blank model ike act in Jquery(last project)
+        var st = angular.module("student", []);//all mvc works must be placed in a module.Here, name of the module is student,[] means we used no other built-in or custom module
+        st.run(function ($http) {
+            //$hhtp is an alternative to $.ajax in jquery
+            $http({
+                method: "GET",
+                url: "/dept_items/Jsondept"
+            }).then(function successCallback(data) {
+                model.dept = data.data;//all records
+            },
+                function errorCallback(response) {
+                    alert("error");
+                });
+        });
+        st.controller("stCtrl", function ($scope, $http) {
+            $scope.allst = model;//allSt.dept=model.dept
+            $scope.add = function () {
+                $http({
+                    method: "POST",
+                    url: "/Dept_items/InsertDept?deptid=" + $scope.deptid + "&deptname=" + $scope.deptname + "&location=" + $scope.location
+                }).then(function successCallback(response) {
+                    $scope.allst.dept.push({ "deptid": $scope.deptid, "deptname": $scope.deptname, "location": $scope.location });
+                },
+                    function errorCallback(response) {
+                        alert("Error");
+                    });
+            }
+            $scope.show = function (i) {
+                $scope.deptid = $scope.allst.dept[i].deptid;
+                $scope.deptname = $scope.allst.dept[i].deptname;
+                $scope.location = $scope.allst.dept[i].location;
+                $scope.sl = i;
+            }
+            $scope.update = function () {
+                alert("/Dept_items/updateDept/" + $scope.deptid + "?deptname=" + $scope.deptname + "&location=" + $scope.location);
+                $http({
+                    method: "PUT",
+                    url: "/Dept_items/updateDept/" + $scope.deptid + "?deptname=" + $scope.deptname + "&location=" + $scope.location
+                }).then(function successCallback(response) {
+                    $scope.allst.dept[$scope.sl].deptid = $scope.deptid;
+                    $scope.allst.dept[$scope.sl].deptname = $scope.deptname;
+                    $scope.allst.dept[$scope.sl].location = $scope.location;
+                },
+                    function errorCallback(response) {
+                        alert("Error");
+                    });
+            }
+            $scope.delete = function () {
+                $http({
+                    method: "Delete",
+                    url: "/dept_items/DeleteAll/" + $scope.deptid
+                }).then(function successCallback(response) {
+                    $scope.allst.dept.splice($scope.sl, 1);
+                },
+                    function errorCallback(response) {
+                        alert("Error");
+                    });
+            }
+
+        });
+    </script>
+    <title>Submit</title>
+</head>
+<body ng-controller="stCtrl">
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-4">
+                <div>
+                    <label for="deptid">Department ID(Two Wau Bonding:Read and Write)</label>
+                    <input ng-model="deptid" type="text" class="form-control" />
+                </div>
+                <div>
+                    <label for="deptname">Department Name(Two Wau Bonding:Read and Write)</label>
+                    <input ng-model="deptname" type="text" class="form-control" />
+                </div>
+                <div>
+                    <label for="location">location(Two Wau Bonding:Read and Write)</label>
+                    <input ng-model="location" type="text" class="form-control" />
+                </div>
+                <div>
+                    <input type="button" name="button" id="button" value="Insert" class="btn btn-outline-dark" ng-click="add()" />
+
+                    <input type="button" name="button" id="button" value="Delete" class="btn btn-danger" ng-click="delete()" />
+                    
+                    <input type="button" name="button" id="button" value="Update" class="btn btn-warning" ng-click="update()" />
+                </div>
+
+                <div id="outp" style="background-color: gray;"></div>
+            </div>
+            <div class="col-sm-8">
+                <h1>Total Students(One-Way Binding:Only Display):{{allst.dept.length}}</h1>
+                <table class="table table-bordered">
+                    <tr><th>ID</th><th>Dept Name</th><th>location</th></tr>
+                    <tr ng-repeat="a in allst.dept" ng-click="show($index)">
+                        <td>{{a.deptid}}</td>
+                        <td>{{a.deptname}}</td>
+                        <td>{{a.location}}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

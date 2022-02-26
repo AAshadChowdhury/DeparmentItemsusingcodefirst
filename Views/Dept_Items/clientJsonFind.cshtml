@@ -1,0 +1,56 @@
+﻿<html ng-app="MyModule" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <script src="~/lib/angular.js/angular.js"></script>
+    <script>
+        var a = angular.module("MyModule", []);
+        a.controller("mycontroller", function ($scope, $http) {
+            $scope.itemcode = "";
+            $scope.findbycode = function () {
+                $http({
+                    method: "GET",
+                    url: "/dept_items/GetItemsByItemCode?id=" + $scope.itemcode
+                }).then(function successCallback(d) {
+                    $scope.model = d.data;
+                   
+                });
+            }
+        });
+    </script>
+</head>
+<body ng-controller="mycontroller">
+    <div>
+        pls input itemcode which you want to find<input ng-model="itemcode" />
+        <button type="button" ng-click="findbycode()">FInd By itemcode</button>
+    </div>
+    <table class="table table-bordered table-light table-hover">
+        <thead>
+            <tr>
+                <th>ItemCode</th>
+                <th>ItemName</th>
+                <th>DeptId</th>
+                <th>cost</th>
+                <th>rate</th>
+                <th>date</th>
+                <th>available</th>
+                <th>picture</th>
+
+
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="a in model">
+                <td>{{a.itemcode}}</td>
+                <td>{{a.itemname}}</td>
+                <td>{{a.deptid}}</td>
+                <td>{{a.cost}}</td>
+                <td>{{a.rate}}</td>
+                <td>{{a.date|date:"dd/MM/yyyy"}}</td>
+                <td>{{a.available}}</td>
+                <td><img alt="{{a.itemcode}}" ng-src="{{a.picture}}" style="height:100px;width:100px" /></td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>

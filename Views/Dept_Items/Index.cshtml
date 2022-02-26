@@ -1,0 +1,251 @@
+﻿
+<script src="~/lib/jquery/jquery.js"></script>
+
+
+<h2>Create/Update</h2>
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        <h4>Dept_Items</h4>
+        <hr />
+        <div class="row">
+            <div class="col-sm-4">
+                <h2>Department Table</h2>
+                <div class="form-group">
+                    <label for="DeptId">Dept Id</label>
+                    <input id="DeptId" name="DeptId" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="DeptName">Dept Name</label>
+                    <input id="DeptName" name="DeptName" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="Location">Location</label>
+                    <input id="Location" name="Location" class="form-control" />
+                </div>
+
+            </div>
+            <div class="col-sm-8">
+                <div id="items"></div>
+                <h2>Items Table</h2>
+                <div class="form-group">
+                    <label for="ItemCode">ItemCode</label>
+                    <input id="ItemCode" name="ItemCode" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="ItemName">Item Name</label>
+                    <input id="ItemName" name="ItemName" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="Cost">Cost Price</label>
+                    <input id="Cost" name="Cost" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label for="Rate">Sale Price</label>
+                    <input id="Rate" name="Rate" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="Available">In Stock</label>
+                    <input id="Available" type="checkbox" value="True" name="Available" />
+                
+                </div>
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" name="date" id="date" class="form-control" />
+
+                </div>
+
+                <div class="form-group">
+                    <label for="picture">Picture</label>
+                    <input type="file" name="picture" id="picture" />
+                </div>
+
+
+                <button type='button' id="add" class="btn btn-primary">Add</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <button type='button' id="save" class="btn btn-lg btn-default btn-primary">Save</button>
+                <button type='button' id="deleteall" class="btn btn-lg btn-default btn-primary">Remove</button>
+            </div>
+
+
+        </div>
+
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+<script>
+    $(document).ready(function () {
+        let searchParams = new URLSearchParams(window.location.search)
+        if (searchParams.has('sid')) {
+            $("#DeptId").val(searchParams.get('sid'));
+            deptChanges();
+        }
+
+
+        var act = [];
+        var index=-1;
+        $("#DeptId").keyup(function () {
+            deptChanges();
+        });
+        $("#addnew").click(function () {
+            $("#DeptId").val("");
+            deptChanges();
+        });
+        $("#ItemCode").keyup(function () {
+            getAjax('/Dept_items/GetItemsByItemCode/' + $("#ItemCode").val(), function (r) {
+                if (r != "") {
+                    $("#ItemName").val(r[0].itemname);
+                    $("#Cost").val(r[0].cost);
+                    $("#Rate").val(r[0].rate);
+                   
+
+                }
+                else {
+                    $("#ItemName").val("");
+                    $("#Cost").val("");
+                    $("#Rate").val("");
+                    
+                }
+              
+            });
+        });
+        function deptChanges() {
+            getAjax('/Dept_items/GetDept/' + $("#DeptId").val(), function (r) {
+                if (r != "") {
+                    $("#DeptName").val(r[0].deptname);
+                    $("#Location").val(r[0].location);
+                }
+                else {
+                    $("#DeptName").val("");
+                    $("#Location").val("");
+                }
+                showItems();
+            });
+        }
+        function showItems() {
+            getAjax('/Dept_items/GetItems/' + $("#DeptId").val(), function (data) {
+                act = data;
+                items();
+            });
+
+        }
+        function items() {
+            var j = 0;
+
+            var a = "<table class='table'><tr><th>Code</th><th>Name</th><th>Cost</th><th>Sale</th><th>Instock</th><th>Date</th><th>Picture</th><th></th></tr>";
+            for (d in act) {
+                today = ConvertDate(act[d].date);
+                a += `<tr><td>${act[d].itemcode}</td><td>${act[d].itemname}</td><td>${act[d].cost}</td><td>${act[d].rate}</td><td>${act[d].available}</td><td>${today}</td><td><img src='/uploads/${act[d].picture}' width='100'/></td><td><button type='button' onclick="edit1('${act[d].itemcode}','${act[d].itemname}','${act[d].cost}','${act[d].rate}',${j},'${today}','${act[d].picture}')">Edit</button><button type='button' onclick="remove(${j})">Remove</button></td></tr>`;
+                j++;
+            }
+            a += "</table>";
+            $("#items").html(a);
+        }
+        $("#add").click(function () {
+            var dt = $("#date").val();
+
+          //   var MYBOOL = $("#Available").val();
+          //alert(MYBOOL]
+            if ($('#Available').is(":checked")) {
+                MYBOOL = true;
+            }
+            else {
+                MYBOOL = false;
+            }
+            alert(MYBOOL);
+            if ($("#add").html() == "Add") {
+                      var files = $("#picture").get(0).files;
+                    var fname = files[0].name
+                    var fileData = new FormData();
+                    fileData.append(files[0].name, files[0]);
+                    $.ajax({
+                        url: '/Dept_items/UploadFiles',
+                        type: "POST",
+                        contentType: false,
+                        processData: false,
+                        data: fileData,
+                        success: function (result) {
+                            act.push({ "itemcode": $("#ItemCode").val(), "itemname": $("#ItemName").val(), "cost": $("#Cost").val(), "rate": $("#Rate").val(), "available": MYBOOL, "date": dt, "picture": fname });
+                            items();
+                        },});
+            }
+            else {
+                v = { "itemcode": $("#ItemCode").val(), "itemname": $("#ItemName").val(), "cost": $("#Cost").val(), "rate": $("#Rate").val(), "available": MYBOOL,"date": dt, "picture": $("#picture").val().split('\\').pop() };
+                act[index] = v;
+                items();
+                $("#add").html("Add");
+            }
+           });
+
+        $("#save").click(function () {
+            var i = 0;
+            getAjax('/Dept_items/DeleteAll/' + $("#DeptId").val(), function (data) {
+                url = `deptid=${$("#DeptId").val()}&deptname=${$("#DeptName").val()}&location=${$("#Location").val()}`;
+                getAjax('/Dept_items/InsertDept?' + url, function (data) {
+                    for (d in act) {
+                        url1 = `itemcode=${act[d].itemcode}&itemname=${act[d].itemname}&deptid=${$("#DeptId").val()}&cost=${act[d].cost}&rate=${act[d].rate}&available=${act[d].available}&date=${act[d].date}&picture=${act[d].picture}`;
+                        getAjax('/Dept_items/Insertitems?' + url1, function (data) {
+                            i++;
+                            if (i == act.length) {
+                                act = [];
+                                items();
+                                window.location = "/dept_items/main";
+                            }
+                        });
+                    }
+                });
+            });
+
+
+        });
+
+        $("#deleteall").click(function () {
+            getAjax('/dept_items/DeleteAll/' + $("#DeptId").val(), function (d) {
+                window.location = '/dept_items/main';
+            });
+            });
+        remove=function(j) {
+            act.splice(j, 1);
+            items();
+        }
+        edit1 = function (a, b, c, d,e,f,g,z) {
+            $("#ItemCode").val(a);
+            $("#ItemName").val(b);
+            $("#Cost").val(c);
+            $("#Rate").val(d);
+            $("#Available").val(z);
+            index = e;
+            $("#date").val(f);
+            $("#add").html("Edit");
+        }
+        function ConvertDate(f) {
+            value = new Date(f);
+            var dd = String(value.getDate()).padStart(2, '0');
+            var mm = String(value.getMonth() + 1).padStart(2, '0');
+            var yyyy = value.getFullYear();
+            today = yyyy + "-" + mm + "-" + dd;
+            return today;
+        }
+  
+        function getAjax(url,callback) {
+            $.ajax({
+                dataType: "json",
+                url: url,
+                success: callback
+            });
+        }
+    })
+</script>

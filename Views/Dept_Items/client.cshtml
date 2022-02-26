@@ -1,0 +1,78 @@
+﻿<html ng-app="MyModule">
+<head>
+    <title></title>
+    <script src="~/lib/angular.js/angular.js"></script>
+    <script>
+
+
+        var a = angular.module("MyModule", []);
+        a.controller("Mycontroller", function ($scope, $http) {
+            $scope.itemcode = "";
+            $scope.find = function () {
+                if ($scope.itemcode == "") {
+                    u= "/dept_items/JsonIndex";
+                    $scope.showsingle = false;
+                }
+                else {
+                    u= "/dept_items/GetItemsByItemCode?id=" + $scope.itemcode;
+                    $scope.showsingle = true;
+                }
+                $http({ method: "GET", url: u }).then(function successCallback(data) { $scope.d = data.data; },
+                    function errorCallback(response) { alert("error"); })
+            }
+            //    $http({
+            //        method: "GET",
+            //                    url: "/dept_items/JsonIndex"
+            //    }).then(function successCallback(data) {
+            //        $scope.d = data.data;
+            //    },
+            //        function errorCallback(response) {
+            //            alert("error");
+            //        });
+            //}
+        });
+    </script>
+
+</head>
+<body ng-controller="Mycontroller">
+    <div>
+        <input ng-model="itemcode"/>
+        <button type="button" ng-click="find()">find </button>
+    </div>
+    <div id="showsingle" ng-show="showsingle">
+        <div>itemcode:{{d.itemcode}}</div>
+        <div>itemname:{{d.itemname}}</div>
+        <div>itemcost:{{d.cost}}</div>
+        <div>itemdept:{{d.deptid}}</div>
+    </div>
+    <table class="table table-bordered table-light table-hover">
+        <thead>
+            <tr>
+                <th>ItemCode</th>
+                <th>ItemName</th>
+                <th>DeptId</th>
+                <th>cost</th>
+                <th>rate</th>
+                <th>date</th>
+                <th>available</th>
+                <th>picture</th>
+
+
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="a in d">
+                <td>{{a.itemcode}}</td>
+                <td>{{a.itemname}}</td>
+                <td>{{a.deptid}}</td>
+                <td>{{a.cost}}</td>
+                <td>{{a.rate}}</td>
+                <td>{{a.date|date:"dd/MM/yyyy"}}</td>
+                <td>{{a.available}}</td>
+                <td>{{a.picture}}</td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>
